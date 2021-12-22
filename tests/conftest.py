@@ -42,7 +42,8 @@ def client(session):
     # run our code before we run our test        
     yield TestClient(app)
     # run our code after our test finishes    
-    
+
+# fixture to create a user for tests    
 @pytest.fixture
 def test_user(client):
     user_data = {"email": "user@gmail.com", "password": "123456"}
@@ -53,9 +54,20 @@ def test_user(client):
     return new_user
 
 @pytest.fixture
+def test_user2(client):
+    user_data = {"email": "user2@gmail.com", "password": "123456"}
+    res = client.post("/users/", json=user_data)
+    assert res.status_code == 201
+    new_user = res.json()
+    new_user['password'] = user_data['password']
+    return new_user
+
+# fixture for create Token for user_test when it's necessary authentication
+@pytest.fixture
 def token(test_user):
     return create_access_token({"user_id": test_user['id']})
 
+# fixture to generate an authorized client by put token inside header of default client
 @pytest.fixture
 def authorized_client(client, token):
     client.headers = {
@@ -65,7 +77,7 @@ def authorized_client(client, token):
     return client
 
 @pytest.fixture
-def test_posts(test_user, session):
+def test_posts(test_user, session, test_user2):
     posts_data = [{
         "title": "first title",
         "content": "first content",
@@ -78,6 +90,10 @@ def test_posts(test_user, session):
         "title": "3rd title",
         "content": "3rd content",
         "owner_id": test_user['id']        
+    }, {
+        "title": "4th title",
+        "content": "4th content",
+        "owner_id": test_user2['id']        
     }]
     
     def create_post_model(post):
@@ -94,3 +110,5 @@ def test_posts(test_user, session):
     session.commit()
     
     return session.query(models.Post).all()
+
+
