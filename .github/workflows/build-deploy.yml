@@ -52,5 +52,5 @@ jobs:
     needs: [build]
 
     steps:
-      -name: deploying stuff
-        run: echo "test deploy..."
+      - name: deploying stuff
+        run: echo "test deploy test"
